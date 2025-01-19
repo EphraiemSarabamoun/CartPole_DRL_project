@@ -113,5 +113,43 @@ for episode in range(num_episodes):
     # Print progress
     print(f"Episode {episode + 1}/{num_episodes}, Total Reward: {total_reward}, Epsilon: {epsilon:.2f}")
 
+def visualize_and_save_video(model, video_dir, env_name="CartPole-v1", num_episodes=5):
+    """
+    Visualize and save video of the agent's performance.
+    """
+    # Create the environment with a different render mode
+    env = gym.make(env_name, render_mode="human")  # Changed from "rgb_array" to "human"
+    
+    for episode in range(num_episodes):
+        state, _ = env.reset()
+        state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+        total_reward = 0
+        done = False
 
+        print(f"Episode {episode + 1}")
+        while not done:
+            # Select action using the trained model
+            with torch.no_grad():
+                q_values = model(state)
+                action = torch.argmax(q_values).item()
+
+            # Take action in the environment
+            next_state, reward, terminated, truncated, info = env.step(action)
+            next_state = torch.tensor(next_state, dtype=torch.float32).unsqueeze(0)
+            env.render()  # Add explicit render call
+
+            # Update state and total reward
+            state = next_state
+            total_reward += reward
+
+            # Determine if the episode is done
+            done = terminated or truncated
+
+        print(f"Total Reward: {total_reward}")
+
+    env.close()
+    print("Visualization complete")
+
+# Call the function to save videos
+visualize_and_save_video(model, video_dir="./cartpole_videos")
 
